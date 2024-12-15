@@ -174,7 +174,7 @@ function PrintLoadedData()
     
     -- Print each item and its price/vendor from AuctionAssistantData
     for itemName, itemData in pairs(AuctionAssistantData) do
-        print(string.format("Item: %s, Price: %d copper, Vendor: %s", AddItemLinkName(itemName), itemData.price, itemData.vendor))  -- Use AddItemLinkName here
+        print(string.format("Item: %s, Price: %d copper, Vendor: %d copper", AddItemLinkName(itemName), itemData.price, itemData.vendor))  -- Use AddItemLinkName here
     end
 end
 
@@ -185,6 +185,14 @@ SlashCmdList["AAPRINTDATA"] = function()
     PrintLoadedData()
 end
 
+local function CalculateCurrency(copper)
+    local gold = math.floor(copper / 10000) -- 1 gold = 10000 copper
+    local remainder = copper % 10000
+    local silver = math.floor(remainder / 100) -- 1 silver = 100 copper
+    local copperLeft = remainder % 100
+    return gold, silver, copperLeft
+end
+
 -- Tooltip hook to display prices and vendors for items in the tooltip
 local function OnTooltipSetItem(tooltip)
     local _, itemLink = tooltip:GetItem()
@@ -192,12 +200,29 @@ local function OnTooltipSetItem(tooltip)
         local itemName = CleanItemName(itemLink)
         if itemName then
             -- Search for the item in AuctionAssistantData
-            local priceInCopper, vendorName = SearchInItemPrices(itemName)
+            local priceInCopper, vendorPriceInCopper = SearchInItemPrices(itemName)
 
-            -- If a price is found, add it to the tooltip
+            -- If a price is found, format and add it to the tooltip
             if priceInCopper then
-                tooltip:AddLine(string.format("Auction: %d copper", priceInCopper), 1, 1, 0)
-                tooltip:AddLine(string.format("Vendor: %s", vendorName), 0, 1, 0)
+                -- Convert auction price to gold, silver, and copper
+                local goldAuction, silverAuction, copperAuction = CalculateCurrency(priceInCopper)
+                local goldTextAuction = string.format("|cffffd700%d|r", goldAuction) -- Gold color
+                local silverTextAuction = string.format("|cffc7c7cf%02d|r", silverAuction) -- Silver color
+                local copperTextAuction = string.format("|cffeda55f%02d|r", copperAuction) -- Copper color
+                local auctionLine = string.format("Auction: %s %s %s", goldTextAuction, silverTextAuction, copperTextAuction)
+                tooltip:AddLine(auctionLine, 1, 1, 0)
+
+                -- Convert vendor price to gold, silver, and copper
+                if vendorPriceInCopper then
+                    local goldVendor, silverVendor, copperVendor = CalculateCurrency(vendorPriceInCopper)
+                    local goldTextVendor = string.format("|cffffd700%d|r", goldVendor)
+                    local silverTextVendor = string.format("|cffc7c7cf%02d|r", silverVendor)
+                    local copperTextVendor = string.format("|cffeda55f%02d|r", copperVendor)
+                    local vendorLine = string.format("Vendor: %s %s %s", goldTextVendor, silverTextVendor, copperTextVendor)
+                    tooltip:AddLine(vendorLine, 0, 1, 0)
+                else
+                    tooltip:AddLine("No vendor price found.", 1, 0, 0)
+                end
             else
                 tooltip:AddLine("No stored price found.", 1, 0, 0)
             end
@@ -206,7 +231,6 @@ local function OnTooltipSetItem(tooltip)
         end
     end
 end
-
 
 -- Hook the tooltip function to display item prices when hovering over items
 GameTooltip:HookScript("OnTooltipSetItem", OnTooltipSetItem)
