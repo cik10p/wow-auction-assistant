@@ -21,6 +21,34 @@ function AddItemLinkName(itemName)
     return "[" .. itemName .. "]"
 end
 
+-- Function to delete an item price from the AuctionAssistantData
+function DeleteItemPrice(itemLinkOrName)
+    local itemName = CleanItemName(itemLinkOrName)
+    
+    if AuctionAssistantData[itemName] then
+        AuctionAssistantData[itemName] = nil
+        print("Deleted item: " .. AddItemLinkName(itemName))  -- Use AddItemLinkName here
+    else
+        print("Item not found: " .. AddItemLinkName(itemName))  -- Use AddItemLinkName here
+    end
+end
+
+-- Define the slash command to delete item prices
+SLASH_AADELETEPRICE1 = "/deleteprice"
+SlashCmdList["AADELETEPRICE"] = function(msg)
+    -- Split the message into item name or item link
+    local itemLinkOrName = msg
+
+    -- Check if the input is valid (item name or item link must be provided)
+    if itemLinkOrName then
+        -- Call the DeleteItemPrice function with the provided arguments
+        DeleteItemPrice(itemLinkOrName)
+    else
+        -- Provide usage instructions if the input is invalid
+        print("Usage: /deleteprice <Item Name or Item Link>")
+    end
+end
+
 -- Function to add or update an item price in the AuctionAssistantData
 function AddItemPrice(itemLinkOrName, price, vendor)
     -- Clean the item name (remove item link formatting)
