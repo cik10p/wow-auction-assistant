@@ -1,42 +1,54 @@
--- AuctionAssistant: Tooltip enhancer for auction and vendor info
+-- AuctionAssistant: Simple addon with hardcoded prices for Linen Cloth and Light Leather
 
--- Create a frame to handle events
-local AuctionAssistantFrame = CreateFrame("Frame")
+-- Hardcoded prices for some items (prices in copper)
+local itemPrices = {
+    ["Linen Cloth"] = {price = 500, vendor = "General Goods Vendor"},
+    ["Light Leather"] = {price = 300, vendor = "Leatherworking Supply Vendor"}
+}
 
--- Hardcoded total currency in copper (e.g., 1 gold, 5 silver, 5 copper = 10505 copper)
-local totalCopper = 10503
-
--- Function to calculate gold, silver, and copper
-local function CalculateCurrency(copper)
-    local gold = math.floor(copper / 10000) -- 1 gold = 10000 copper
-    local remainder = copper % 10000
-    local silver = math.floor(remainder / 100) -- 1 silver = 100 copper
-    local copperLeft = remainder % 100
-    return gold, silver, copperLeft
+-- Function to search for an item in the hardcoded prices table
+function SearchInItemPrices(itemName)
+    if itemPrices[itemName] then
+        local data = itemPrices[itemName]
+        return data.price, data.vendor -- Return price in copper and vendor name
+    end
+    return nil, nil -- Item not found
 end
 
--- Function to add lines to tooltips
+-- Function to print the current loaded data to the chat window
+function PrintLoadedData()
+    -- Print each item and its price/vendor from the itemPrices table
+    for itemName, itemData in pairs(itemPrices) do
+        print(string.format("Item: %s, Price: %d copper, Vendor: %s", itemName, itemData.price, itemData.vendor))
+    end
+end
+
+-- Hook for when the tooltip is set on an item
 local function OnTooltipSetItem(tooltip)
-    -- Check if the tooltip has an item
     local _, itemLink = tooltip:GetItem()
     if itemLink then
-        -- Calculate gold, silver, and copper amounts
-        local goldAmount, silverAmount, copperAmount = CalculateCurrency(totalCopper)
+        -- Extract item name
+        local itemName = GetItemInfo(itemLink)
+        if itemName then
+            -- Search for the item in the hardcoded prices table
+            local priceInCopper, vendorName = SearchInItemPrices(itemName)
 
-        -- Format the currency values with color codes
-        local goldText = string.format("|cffffd700%d|r", goldAmount) -- Gold color
-        local silverText = string.format("|cffc7c7cf%02d|r", silverAmount) -- Silver color
-        local copperText = string.format("|cffeda55f%02d|r", copperAmount) -- Copper color
+            -- Add lines to the tooltip
+            if priceInCopper then
+                -- Display stored price and vendor
+                tooltip:AddLine(string.format("Stored price: %d copper", priceInCopper), 1, 1, 0)
+                tooltip:AddLine(string.format("Vendor: %s", vendorName), 0, 1, 0)
+            else
+                tooltip:AddLine("No stored price found.", 1, 0, 0)
+            end
 
-        -- Combine the currency values into one line
-        local auctionLine = string.format("auction %s %s %s", goldText, silverText, copperText)
-
-        -- Add the formatted line to the tooltip
-        tooltip:AddLine(auctionLine, 1, 1, 0) -- Yellow text
-        tooltip:AddLine("vendor", 0, 1, 0) -- Green text
-        tooltip:Show() -- Refresh the tooltip to display the new lines
+            tooltip:Show() -- Refresh the tooltip to display the new lines
+        end
     end
 end
 
 -- Hook the function to the tooltip
 GameTooltip:HookScript("OnTooltipSetItem", OnTooltipSetItem)
+
+-- Example usage of PrintLoadedData function (to be called in chat)
+-- /run PrintLoadedData() to print out hardcoded data
