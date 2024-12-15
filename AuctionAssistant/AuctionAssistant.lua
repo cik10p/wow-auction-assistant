@@ -3,8 +3,24 @@
 -- Initialize SavedVariables if it doesn't exist
 AuctionAssistantData = AuctionAssistantData or {}
 
+-- Function to clean the item name by removing the item link formatting
+function CleanItemName(itemLinkOrName)
+    if itemLinkOrName then
+        -- If the input is an item link, extract the item name
+        local itemName = GetItemInfo(itemLinkOrName)
+        if itemName then
+            return itemName
+        end
+    end
+    -- If not an item link, assume it's a regular item name
+    return itemLinkOrName
+end
+
 -- Function to add or update an item price in the AuctionAssistantData
-function AddItemPrice(itemName, price, vendor)
+function AddItemPrice(itemLinkOrName, price, vendor)
+    -- Clean the item name (remove item link formatting)
+    local itemName = CleanItemName(itemLinkOrName)
+    
     -- Check if the item already exists, if so, update it
     if not AuctionAssistantData[itemName] then
         print("Adding new item: " .. itemName)
@@ -22,17 +38,17 @@ end
 -- Define the slash command to add or update item prices
 SLASH_AAADDPRICE1 = "/addprice"
 SlashCmdList["AAADDPRICE"] = function(msg)
-    -- Split the message into item name, price, and vendor
-    local itemName, price, vendor = strsplit(",", msg)
+    -- Split the message into item name or item link, price, and vendor
+    local itemLinkOrName, price, vendor = strsplit(",", msg)
     price = tonumber(price)  -- Convert price to a number
 
     -- Check if the input is valid (all fields must be provided)
-    if itemName and price and vendor then
+    if itemLinkOrName and price and vendor then
         -- Call the AddItemPrice function with the provided arguments
-        AddItemPrice(itemName, price, vendor)
+        AddItemPrice(itemLinkOrName, price, vendor)
     else
         -- Provide usage instructions if the input is invalid
-        print("Usage: /addprice <Item Name>, <Price>, <Vendor>")
+        print("Usage: /addprice <Item Name or Item Link>, <Price>, <Vendor>")
     end
 end
 
@@ -53,7 +69,6 @@ function PrintLoadedData()
         return
     end
 
-    
     print("############################")
     print("AuctionAssistant Data:")
     print("############################")
@@ -75,7 +90,7 @@ end
 local function OnTooltipSetItem(tooltip)
     local _, itemLink = tooltip:GetItem()
     if itemLink then
-        local itemName = GetItemInfo(itemLink)
+        local itemName = CleanItemName(itemLink)
         if itemName then
             -- Search for the item in AuctionAssistantData
             local priceInCopper, vendorName = SearchInItemPrices(itemName)
