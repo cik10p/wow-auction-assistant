@@ -16,6 +16,10 @@ function CleanItemName(itemLinkOrName)
     return itemLinkOrName
 end
 
+function AddItemLinkName(itemName)
+    return "[" .. itemName .. "]"
+end
+
 -- Function to add or update an item price in the AuctionAssistantData
 function AddItemPrice(itemLinkOrName, price, vendor)
     -- Clean the item name (remove item link formatting)
