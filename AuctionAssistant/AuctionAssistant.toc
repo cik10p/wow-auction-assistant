@@ -3,4 +3,5 @@
 ## Author: Jacky_LT
 ## Version: 0.1
 ## Notes: Adds hardcoded auction and vendor lines to tooltips.
+## SavedVariables: AuctionAssistantData
 AuctionAssistant.lua
