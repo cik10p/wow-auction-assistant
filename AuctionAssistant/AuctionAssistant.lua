@@ -16,6 +16,7 @@ function CleanItemName(itemLinkOrName)
     return itemLinkOrName
 end
 
+-- Function to add item link formatting (wrap the item name in [])
 function AddItemLinkName(itemName)
     return "[" .. itemName .. "]"
 end
@@ -27,16 +28,16 @@ function AddItemPrice(itemLinkOrName, price, vendor)
     
     -- Check if the item already exists, if so, update it
     if not AuctionAssistantData[itemName] then
-        print("Adding new item: " .. itemName)
+        print("Adding new item: " .. AddItemLinkName(itemName))  -- Use AddItemLinkName here
     else
-        print("Updating price for: " .. itemName)
+        print("Updating price for: " .. AddItemLinkName(itemName))  -- Use AddItemLinkName here
     end
 
     -- Update the item data in the SavedVariables table
     AuctionAssistantData[itemName] = {price = price, vendor = vendor}
 
     -- Print the updated data to the chat window
-    print(string.format("Item: %s, Price: %d copper, Vendor: %s", itemName, price, vendor))
+    print(string.format("Item: %s, Price: %d copper, Vendor: %s", AddItemLinkName(itemName), price, vendor))  -- Use AddItemLinkName here
 end
 
 -- Define the slash command to add or update item prices
@@ -79,7 +80,7 @@ function PrintLoadedData()
     
     -- Print each item and its price/vendor from AuctionAssistantData
     for itemName, itemData in pairs(AuctionAssistantData) do
-        print(string.format("Item: %s, Price: %d copper, Vendor: %s", itemName, itemData.price, itemData.vendor))
+        print(string.format("Item: %s, Price: %d copper, Vendor: %s", AddItemLinkName(itemName), itemData.price, itemData.vendor))  -- Use AddItemLinkName here
     end
 end
 
