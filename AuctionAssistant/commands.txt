@@ -1,0 +1,3 @@
+
+/addprice Linen Cloth, 25, 10
+/printdata
