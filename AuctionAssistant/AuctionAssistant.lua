@@ -16,6 +16,62 @@ function CleanItemName(itemLinkOrName)
     return itemLinkOrName
 end
 
+-- ################   AH Commands   ################
+
+
+SLASH_SCANPRICE1 = "/scanprice"
+
+local function isAuctionHouseOpen()
+    return AuctionFrame and AuctionFrame:IsShown()
+end
+
+function SlashCmdList.SCANPRICE(msg)
+    -- Hardcode the item name
+    local itemName = "Light Leather"
+
+    -- Ensure the auction house is open
+    if not isAuctionHouseOpen() then
+        print("Auction house is not open. Please open the auction house and try again.")
+        return
+    end
+
+    -- Search the auction house for the item
+    local totalResults = 0
+    local minBuyout = math.huge
+    local minPriceString = ""
+
+    -- Loop through the auction house listings
+    for i = 1, GetNumAuctionItems("list") do
+        local name, _, _, _, _, _, _, _, _, _, _, _, _, _, buyoutPrice = GetAuctionItemInfo("list", i)
+
+        if name and name:lower() == itemName:lower() then
+            totalResults = totalResults + 1
+            if buyoutPrice and buyoutPrice > 0 then
+                if buyoutPrice < minBuyout then
+                    minBuyout = buyoutPrice
+                    minPriceString = GetCoinTextureString(buyoutPrice)
+                end
+            end
+        end
+    end
+
+    if totalResults == 0 then
+        print("No auctions found for '" .. itemName .. "'.")
+    else
+        if minBuyout == math.huge then
+            print("No buyout prices found for '" .. itemName .. "'.")
+        else
+            print("The lowest buyout price for '" .. itemName .. "' is: " .. minPriceString)
+        end
+    end
+end
+
+-- ## END OF AUCTION HOUSE COMMANDS ##
+
+
+
+
+
 -- Function to add item link formatting (wrap the item name in [])
 function AddItemLinkName(itemName)
     return "[" .. itemName .. "]"
@@ -47,6 +103,16 @@ SlashCmdList["AADELETEPRICE"] = function(msg)
         -- Provide usage instructions if the input is invalid
         print("Usage: /deleteprice <Item Name or Item Link>")
     end
+end
+
+-- Define the slash command to clear all data in AuctionAssistantData
+SLASH_AACLEARALL1 = "/clearall"
+SlashCmdList["AACLEARALL"] = function()
+    -- Clear the AuctionAssistantData table
+    AuctionAssistantData = {}
+
+    -- Confirm to the user that the data has been cleared
+    print("AuctionAssistant data has been cleared.")
 end
 
 -- Function to add or update an item price in the AuctionAssistantData
@@ -130,7 +196,7 @@ local function OnTooltipSetItem(tooltip)
 
             -- If a price is found, add it to the tooltip
             if priceInCopper then
-                tooltip:AddLine(string.format("Stored price: %d copper", priceInCopper), 1, 1, 0)
+                tooltip:AddLine(string.format("Auction: %d copper", priceInCopper), 1, 1, 0)
                 tooltip:AddLine(string.format("Vendor: %s", vendorName), 0, 1, 0)
             else
                 tooltip:AddLine("No stored price found.", 1, 0, 0)
@@ -140,6 +206,7 @@ local function OnTooltipSetItem(tooltip)
         end
     end
 end
+
 
 -- Hook the tooltip function to display item prices when hovering over items
 GameTooltip:HookScript("OnTooltipSetItem", OnTooltipSetItem)
