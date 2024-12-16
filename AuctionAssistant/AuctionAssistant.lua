@@ -89,22 +89,6 @@ function DeleteItemPrice(itemLinkOrName)
     end
 end
 
--- Define the slash command to delete item prices
-SLASH_AADELETEPRICE1 = "/deleteprice"
-SlashCmdList["AADELETEPRICE"] = function(msg)
-    -- Split the message into item name or item link
-    local itemLinkOrName = msg
-
-    -- Check if the input is valid (item name or item link must be provided)
-    if itemLinkOrName then
-        -- Call the DeleteItemPrice function with the provided arguments
-        DeleteItemPrice(itemLinkOrName)
-    else
-        -- Provide usage instructions if the input is invalid
-        print("Usage: /deleteprice <Item Name or Item Link>")
-    end
-end
-
 -- Define the slash command to clear all data in AuctionAssistantData
 SLASH_AACLEARALL1 = "/clearall"
 SlashCmdList["AACLEARALL"] = function()
@@ -134,6 +118,48 @@ function AddItemPrice(itemLinkOrName, price, vendor)
     print(string.format("Item: %s, Price: %d copper, Vendor: %s", AddItemLinkName(itemName), price, vendor))  -- Use AddItemLinkName here
 end
 
+
+
+-- Function to quickly update the price of an item
+function QuickUpdatePrice(itemLinkOrName, price)
+    -- Clean the item name (remove item link formatting)
+    local itemName = CleanItemName(itemLinkOrName)
+    
+    -- Check if the item already exists
+    if AuctionAssistantData[itemName] then
+        -- Update the price while keeping the vendor price unchanged
+        AuctionAssistantData[itemName].price = price
+        print("Updated price for: " .. AddItemLinkName(itemName))
+    else
+        -- Create a new entry with vendor price set to 0
+        AuctionAssistantData[itemName] = {price = price, vendor = 0}
+        print("Added new item with price: " .. AddItemLinkName(itemName))
+    end
+
+    -- Print the updated data to the chat window
+    print(string.format("Item: %s, Price: %d copper, Vendor: %d copper", AddItemLinkName(itemName), price, AuctionAssistantData[itemName].vendor))
+end
+
+-- Function to quickly update the vendor price of an item
+function QuickUpdateVendorPrice(itemLinkOrName, vendor)
+    -- Clean the item name (remove item link formatting)
+    local itemName = CleanItemName(itemLinkOrName)
+    
+    -- Check if the item already exists
+    if AuctionAssistantData[itemName] then
+        -- Update the vendor price while keeping the item price unchanged
+        AuctionAssistantData[itemName].vendor = vendor
+        print("Updated vendor price for: " .. AddItemLinkName(itemName))
+    else
+        -- Create a new entry with item price set to 0
+        AuctionAssistantData[itemName] = {price = 0, vendor = vendor}
+        print("Added new item with vendor price: " .. AddItemLinkName(itemName))
+    end
+
+    -- Print the updated data to the chat window
+    print(string.format("Item: %s, Price: %d copper, Vendor: %d copper", AddItemLinkName(itemName), AuctionAssistantData[itemName].price, vendor))
+end
+
 -- Define the slash command to add or update item prices
 SLASH_AAADDPRICE1 = "/addprice"
 SlashCmdList["AAADDPRICE"] = function(msg)
@@ -150,6 +176,58 @@ SlashCmdList["AAADDPRICE"] = function(msg)
         print("Usage: /addprice <Item Name or Item Link>, <Price>, <Vendor>")
     end
 end
+
+-- Define the slash command to quickly update item prices
+SLASH_AAQUICKUPDATE1 = "/ap"
+SlashCmdList["AAQUICKUPDATE"] = function(msg)
+    -- Split the message into item name or item link and price
+    local itemLinkOrName, price = strsplit(",", msg)
+    price = tonumber(price)  -- Convert price to a number
+
+    -- Check if the input is valid (item name or item link and price must be provided)
+    if itemLinkOrName and price then
+        -- Call the QuickUpdatePrice function with the provided arguments
+        QuickUpdatePrice(itemLinkOrName, price)
+    else
+        -- Provide usage instructions if the input is invalid
+        print("Usage: /ap <Item Name or Item Link>, <Price>")
+    end
+end
+
+-- Define the slash command to quickly update vendor prices
+SLASH_AAQUICKUPDATEVENDOR1 = "/vp"
+SlashCmdList["AAQUICKUPDATEVENDOR"] = function(msg)
+    -- Split the message into item name or item link and vendor price
+    local itemLinkOrName, vendor = strsplit(",", msg)
+    vendor = tonumber(vendor)  -- Convert vendor price to a number
+
+    -- Check if the input is valid (item name or item link and vendor price must be provided)
+    if itemLinkOrName and vendor then
+        -- Call the QuickUpdateVendorPrice function with the provided arguments
+        QuickUpdateVendorPrice(itemLinkOrName, vendor)
+    else
+        -- Provide usage instructions if the input is invalid
+        print("Usage: /vp <Item Name or Item Link>, <Vendor Price>")
+    end
+end
+
+-- Define the slash command to delete item prices
+SLASH_AADELETEPRICE1 = "/dp"
+SlashCmdList["AADELETEPRICE"] = function(msg)
+    -- Get the item name or item link from the message
+    local itemLinkOrName = msg:match("^%s*(.-)%s*$")  -- Trim whitespace
+
+    -- Check if the input is valid (item name or item link must be provided)
+    if itemLinkOrName and itemLinkOrName ~= "" then
+        -- Call the DeleteItemPrice function with the provided argument
+        DeleteItemPrice(itemLinkOrName)
+    else
+        -- Provide usage instructions if the input is invalid
+        print("Usage: /dp <Item Name or Item Link>")
+    end
+end
+
+
 
 -- Function to search for an item in AuctionAssistantData
 function SearchInItemPrices(itemName)
@@ -179,7 +257,7 @@ function PrintLoadedData()
 end
 
 -- Define the slash command to print all data in AuctionAssistantData
-SLASH_AAPRINTDATA1 = "/printdata"
+SLASH_AAPRINTDATA1 = "/pp"
 SlashCmdList["AAPRINTDATA"] = function()
     -- Call the PrintLoadedData function to print the data
     PrintLoadedData()
