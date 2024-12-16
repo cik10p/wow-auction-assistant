@@ -3,6 +3,8 @@
 -- Initialize SavedVariables if it doesn't exist
 AuctionAssistantData = AuctionAssistantData or {}
 
+ShowNoPriceMessage = false
+
 -- Function to clean the item name by removing the item link formatting
 function CleanItemName(itemLinkOrName)
     if itemLinkOrName then
@@ -302,7 +304,9 @@ local function OnTooltipSetItem(tooltip)
                     tooltip:AddLine("No vendor price found.", 1, 0, 0)
                 end
             else
-                tooltip:AddLine("No stored price found.", 1, 0, 0)
+                if ShowNoPriceMessage then
+                    tooltip:AddLine("No stored price found.", 1, 0, 0)
+                end
             end
 
             tooltip:Show() -- Refresh the tooltip to display the new lines
